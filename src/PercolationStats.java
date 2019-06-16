@@ -2,46 +2,121 @@ import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
 
 public class PercolationStats {
-	protected int n;
-	protected int trials;
-	
-	// The constructor should throw a java.lang.IllegalArgumentException if either n
-	// ≤ 0 or trials ≤ 0.
-	public PercolationStats(int n, int trials) {
-		// perform trials independent experiments on an n-by-n grid
-		if (n <= 0 || trials <= 0) throw new IllegalArgumentException("inputs n and trials should not be less than or equal to 0");
-	}
+  private final int size;
+  private final int trials;
+  private double[] threshold;
 
-// sample mean of percolation threshold
-	public double mean() {
-		return 0;
-	}
+  /**
+   * Perform trials as independent experiments on an n-by-n grid.
+   * 
+   * @param n size
+   * @param t trials
+   * 
+   */
+  public PercolationStats(int n, int t) {
+    if (n <= 0 || t <= 0) {
+      throw new IllegalArgumentException("inputs should not be less than or equal to 0");
+    }
 
-// sample standard deviation of percolation threshold
-	public double stddev() {
-		if (this.trials == 1) return Double.NaN;
-		
-		return 0;
-	}
+    this.size = n;
+    this.trials = t;
+    this.threshold = new double[trials];
+  }
 
-// low  endpoint of 95% confidence interval
-	public double confidenceLo() {
-		return 0;
-	}
+  /**
+   * Sample mean of the percolation threshold.
+   * 
+   * @return double
+   * 
+   */
+  public double mean() {
+    return StdStats.mean(this.threshold);
+  }
 
-// high endpoint of 95% confidence interval
-	public double confidenceHi() {
-		return 0;
-	}
+  /**
+   * Sample standard deviation of the percolation threshold.
+   * 
+   * @return double
+   * 
+   */
+  public double stddev() {
+    if (this.trials == 1) {
+      return Double.NaN;
+    }
 
-	// test client (described below)
-	public static void main(String[] args) {
-		// Also, include a main() method that takes two command-line arguments n and T,
-		// performs T independent computational experiments (discussed above) on an
-		// n-by-n grid,
-		// and prints the sample mean, sample standard deviation, and the 95% confidence
-		// interval
-		// for the percolation threshold. Use StdRandom to generate random numbers;
-		// use StdStats to compute the sample mean and sample standard deviation.
-	}
+    return StdStats.stddev(this.threshold);
+  }
+
+  /*
+   * Low endpoint of 95% confidence interval.
+   * 
+   * @return double
+   * 
+   */
+  public double confidenceLo() {
+    return 0;
+  }
+
+  /*
+   * High endpoint of 95% confidence interval.
+   * 
+   * @return double
+   * 
+   */
+  public double confidenceHi() {
+    return 0;
+  }
+
+  private int random(int n) {
+    return StdRandom.uniform(1, n + 1);
+  }
+
+  private void performTrials() {
+    for (int run = 0; run < this.trials; ++run) {
+      this.threshold[run] = performTrial();
+    }
+  }
+
+  private double performTrial() {
+    int openSites = 0;
+    int row = 0;
+    int col = 0;
+
+    Percolation percolation = new Percolation(this.size);
+
+    do {
+      row = random(this.size);
+      col = random(this.size);
+
+      if (!percolation.isOpen(row, col)) {
+        percolation.open(row, col);
+        ++openSites;
+      }
+    } while (!percolation.percolates());
+
+    return openSites / this.size * this.size;
+  }
+
+  /**
+   * Test client. Takes two command-line arguments n and T, performs T independent
+   * computational experiments on an n-by-n grid, and prints the sample mean,
+   * sample standard deviation, and the 95% confidence interval for the
+   * percolation threshold. Use StdRandom to generate random numbers; use StdStats
+   * to compute the sample mean and sample standard deviation.
+   * 
+   * @Param args arguments
+   * 
+   */
+  public static void main(String[] args) {
+    int size = Integer.parseInt(args[0]);
+    int trials = Integer.parseInt(args[1]);
+
+    PercolationStats percolationStats = new PercolationStats(size, trials);
+    percolationStats.performTrials();
+
+    System.out.format("mean = %f", percolationStats.mean());
+    System.out.format("stddev = %f", percolationStats.stddev());
+    System.out.format("95% confidence interval = [%f, %f]", percolationStats.confidenceLo(),
+        percolationStats.confidenceHi());
+  }
 }
